@@ -1,0 +1,29 @@
+# System
+.DS_Store
+Thumbs.db
+
+# Build
+target/
+dist/
+build/
+
+# Rust (Cargo.lock committed for reproducible binary builds)
+
+# Sensitive
+.env
+*.pem
+*.key
+secrets/
+
+# AI & IDE (do not commit local overrides)
+.idea/
+.vscode/
+.claude/
+.obsidian/
+.cursor/
+.gemini/
+.agent/
+.cursorrules
+.geminirules
+.cursorignore
+*.code-workspace
