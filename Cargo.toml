@@ -1,0 +1,40 @@
+[package]
+name = "smms"
+version = "0.1.0"
+edition = "2021"
+description = "Stellaris Multiplayer Mod Sync — host-client bit-for-bit sync for checksum match"
+license = "MIT"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+blake3 = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+indicatif = "0.17"
+keyvalues-parser = "0.2"
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+rusqlite = { version = "0.31", optional = true }
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5"
+winreg = "0.52"
+reqwest = { version = "0.12", features = ["json"] }
+regex = "1"
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+base64 = "0.22"
+rand = "0.8"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tower = "0.5"
+tempfile = "3"
+
+[features]
+default = []
+launcher-read = ["rusqlite"]
+
+[[bin]]
+name = "smms"
+path = "src/main.rs"
