@@ -65,11 +65,9 @@ fn find_steam_root() -> Result<PathBuf, PathResolverError> {
                 .ok()
                 .map(|h| PathBuf::from(h).join(".steam/steam")),
         ];
-        for opt in candidates {
-            if let Some(p) = opt {
-                if p.join("steamapps").exists() {
-                    return Ok(p);
-                }
+        for p in candidates.into_iter().flatten() {
+            if p.join("steamapps").exists() {
+                return Ok(p);
             }
         }
     }
