@@ -1,0 +1,100 @@
+openapi: 3.0.3
+info:
+  title: SMMS Host API
+  version: 1.0.0
+  description: |
+    HTTP API for Stellaris Multiplayer Mod Sync.
+    Host serves either unsigned Manifest or SignedManifest and raw file blobs.
+
+servers:
+  - url: http://{host}:{port}
+    variables:
+      host:
+        default: localhost
+      port:
+        default: "8730"
+
+paths:
+  /manifest:
+    get:
+      summary: Get sync manifest payload
+      description: |
+        Returns unsigned `Manifest` or signed wrapper `SignedManifest`.
+        Client determines authenticity policy based on local host key configuration.
+      responses:
+        '200':
+          description: Manifest payload
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Manifest'
+                  - $ref: '#/components/schemas/SignedManifest'
+        '404':
+          description: Route not found
+
+  /file/{path}:
+    get:
+      summary: Get file blob
+      description: |
+        Raw file content for a manifest key.
+        Server route is wildcard (`/file/*path`), so slash-containing keys are supported.
+        Example key: `workshop/1234567890/common/buildings.txt`.
+      parameters:
+        - name: path
+          in: path
+          required: true
+          allowReserved: true
+          schema:
+            type: string
+          description: Manifest path key (may contain slashes)
+      responses:
+        '200':
+          description: File content (binary)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not in manifest, unsafe path, or local file not found
+
+components:
+  schemas:
+    Manifest:
+      type: object
+      required:
+        - version
+        - generated_at
+        - files
+        - load_order
+      properties:
+        version:
+          type: integer
+          example: 1
+        generated_at:
+          type: string
+          format: date-time
+        files:
+          type: object
+          additionalProperties:
+            type: string
+          description: Path -> BLAKE3 hex hash (64 chars)
+          example:
+            workshop/1234567890/common/buildings.txt: "af3b5d68a2d66238e8a3a95f5a4b0a2d4a5e9cb7ef3f0d8a8e1c7a0d8b7f1234"
+        load_order:
+          type: array
+          items:
+            type: string
+          description: Mod descriptor paths (e.g. mod/ugc_1234567890.mod)
+    SignedManifest:
+      type: object
+      required:
+        - manifest
+        - signature
+      properties:
+        manifest:
+          $ref: '#/components/schemas/Manifest'
+        signature:
+          type: string
+          description: Ed25519 signature over serialized manifest, base64-encoded
