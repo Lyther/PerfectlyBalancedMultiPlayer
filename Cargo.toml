@@ -1,6 +1,6 @@
 [package]
 name = "smms"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Stellaris Multiplayer Mod Sync — host-client bit-for-bit sync for checksum match"
 license = "MIT"

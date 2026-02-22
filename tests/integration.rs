@@ -4,17 +4,14 @@ use serde_json::Value;
 use smms::domain::Manifest;
 use smms::file_backend::FileBackend;
 use std::collections::BTreeMap;
-use std::io::Write;
 use tower::util::ServiceExt;
 
-fn make_test_state() -> smms::server::AppState {
-    let temp = std::env::temp_dir().join("smms_test");
-    let _ = std::fs::create_dir_all(&temp);
-    std::fs::File::create(temp.join("foo.txt"))
-        .and_then(|mut f| f.write_all(b"hello world"))
-        .unwrap();
-    let backend = FileBackend::new(vec![("test".to_string(), temp)]);
-    smms::server::AppState {
+fn make_test_state() -> (smms::server::AppState, tempfile::TempDir) {
+    let temp = tempfile::TempDir::new().unwrap();
+    let path = temp.path().to_path_buf();
+    std::fs::write(path.join("foo.txt"), b"hello world").unwrap();
+    let backend = FileBackend::new(vec![("test".to_string(), path)]);
+    let state = smms::server::AppState {
         manifest: Manifest {
             version: 1,
             generated_at: "2026-02-22T12:00:00Z".to_string(),
@@ -30,12 +27,13 @@ fn make_test_state() -> smms::server::AppState {
         },
         signed_manifest: None,
         files: Some(backend),
-    }
+    };
+    (state, temp)
 }
 
 #[tokio::test]
 async fn manifest_returns_200_and_valid_json() {
-    let state = make_test_state();
+    let (state, _temp) = make_test_state();
     let app = smms::server::router(state);
     let req = Request::builder()
         .uri("/manifest")
@@ -55,7 +53,7 @@ async fn manifest_returns_200_and_valid_json() {
 
 #[tokio::test]
 async fn file_returns_200_for_existing_path() {
-    let state = make_test_state();
+    let (state, _temp) = make_test_state();
     let app = smms::server::router(state);
     let req = Request::builder()
         .uri("/file/test/foo.txt")
@@ -71,7 +69,7 @@ async fn file_returns_200_for_existing_path() {
 
 #[tokio::test]
 async fn file_returns_404_for_missing_path() {
-    let state = make_test_state();
+    let (state, _temp) = make_test_state();
     let app = smms::server::router(state);
     let req = Request::builder()
         .uri("/file/nonexistent.txt")
@@ -83,7 +81,7 @@ async fn file_returns_404_for_missing_path() {
 
 #[tokio::test]
 async fn file_returns_404_for_traversal_path() {
-    let state = make_test_state();
+    let (state, _temp) = make_test_state();
     let app = smms::server::router(state);
     let req = Request::builder()
         .uri("/file/test/../evil.txt")
