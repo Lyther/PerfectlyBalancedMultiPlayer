@@ -19,12 +19,14 @@ rusqlite = { version = "0.31", optional = true }
 thiserror = "2"
 chrono = { version = "0.4", features = ["serde"] }
 dirs = "5"
-winreg = "0.52"
 reqwest = { version = "0.12", features = ["json"] }
 regex = "1"
 ed25519-dalek = { version = "2", features = ["rand_core"] }
 base64 = "0.22"
 rand = "0.8"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
